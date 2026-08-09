@@ -76,9 +76,9 @@
     line-height:1.5;
   }
 
-  .clannie-btn{
+  .corner-btn{
     position:absolute;
-    top:20px; right:24px;
+    right:24px;
     z-index:1;
     font-family:'JetBrains Mono',monospace;
     font-size:11.5px;
@@ -91,9 +91,11 @@
     cursor:pointer;
     transition:border-color .15s, background .15s;
   }
-  .clannie-btn:hover{ border-color:var(--gold); background:rgba(201,161,90,0.18); }
+  .corner-btn:hover{ border-color:var(--gold); background:rgba(201,161,90,0.18); }
+  .clannie-btn{ top:20px; }
+  .leaderboard-btn{ top:60px; }
   @media(max-width:640px){
-    .clannie-btn{ position:static; display:inline-block; margin-bottom:16px; }
+    .corner-btn{ position:static; display:inline-block; margin:0 8px 16px; }
   }
 
   /* ---------- Grid ---------- */
@@ -208,6 +210,72 @@
     margin-bottom:9px;
   }
 
+  /* ---------- Toolbar (search + completion filter) ---------- */
+  .toolbar-row{
+    max-width:640px;
+    margin:26px auto 0;
+    padding:0 24px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+  }
+  .search-bar{
+    flex:1 1 260px;
+    max-width:420px;
+    position:relative;
+  }
+  .search-bar input{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:20px;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:10px 40px 10px 16px;
+    box-sizing:border-box;
+    transition:border-color .15s;
+  }
+  .search-bar input:focus{ outline:none; border-color:var(--gold); }
+  .search-bar input::placeholder{ color:var(--muted-dim); }
+  .search-clear{
+    position:absolute;
+    right:34px; top:50%;
+    transform:translateY(-50%);
+    background:none; border:none;
+    color:var(--muted);
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    padding:4px;
+    display:none;
+  }
+  .search-clear.show{ display:block; }
+  .search-clear:hover{ color:var(--gold-bright); }
+
+  .completion-select{
+    flex:0 1 190px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:20px;
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    padding:10px 16px;
+    box-sizing:border-box;
+    cursor:pointer;
+    transition:border-color .15s;
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238a8a92' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 14px center;
+    padding-right:32px;
+  }
+  .completion-select:focus{ outline:none; border-color:var(--gold); }
+  .completion-select option{ background:var(--panel-raised); color:var(--text); }
+
   /* ---------- Category filter bar ---------- */
   .filter-bar{
     max-width:1280px;
@@ -237,6 +305,84 @@
     border-color:var(--gold);
     color:var(--gold-bright);
   }
+
+  /* ---------- Recent proof rotator ---------- */
+  .proof-rotator{
+    max-width:520px;
+    margin:30px auto 0;
+    padding:0 24px;
+    display:none;
+  }
+  .proof-rotator.show{ display:block; }
+  .proof-rotator-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:8px;
+    text-align:center;
+  }
+  .proof-rotator-frame{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+    aspect-ratio:16/10;
+    cursor:pointer;
+  }
+  .proof-rotator-frame img{
+    width:100%; height:100%;
+    object-fit:cover;
+    display:block;
+    opacity:0;
+    transition:opacity .5s ease;
+  }
+  .proof-rotator-frame img.show{ opacity:1; }
+  .proof-rotator-caption{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    padding:20px 16px 12px;
+    background:linear-gradient(0deg, rgba(4,5,8,0.92) 0%, rgba(4,5,8,0.55) 60%, transparent 100%);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    color:var(--text);
+    pointer-events:none;
+  }
+  .proof-rotator-caption .rtask{ color:var(--gold-bright); font-weight:600; }
+  .proof-rotator-caption .rby{ color:var(--muted); font-size:11.5px; margin-top:2px; }
+  .proof-rotator-nav{
+    position:absolute;
+    top:50%; transform:translateY(-50%);
+    background:rgba(4,5,8,0.5);
+    border:1px solid rgba(255,255,255,0.15);
+    color:var(--text);
+    width:32px; height:32px;
+    border-radius:50%;
+    font-size:18px;
+    line-height:1;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s, border-color .15s;
+  }
+  .proof-rotator-nav:hover{ background:rgba(201,161,90,0.35); border-color:var(--gold); }
+  .proof-rotator-nav.prev{ left:10px; }
+  .proof-rotator-nav.next{ right:10px; }
+  .proof-rotator-dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin-top:10px;
+  }
+  .proof-rotator-dot{
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--border);
+    cursor:pointer;
+    transition:background .15s, transform .15s;
+  }
+  .proof-rotator-dot.active{ background:var(--gold); transform:scale(1.3); }
 
   footer{
     text-align:center;
@@ -480,6 +626,86 @@
     font-size:12.5px;
     color:var(--muted-dim);
     padding:20px 0 4px;
+  }
+
+  /* ---------- Leaderboard modal ---------- */
+  .leaderboard-overlay{
+    position:fixed; inset:0;
+    background:rgba(4,5,8,0.82);
+    z-index:52;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .leaderboard-overlay.open{ display:flex; }
+  .leaderboard-box{
+    position:relative;
+    background:var(--panel-raised);
+    border:1px solid var(--gold);
+    border-radius:14px;
+    padding:30px 26px 26px;
+    width:min(440px, 100%);
+    max-height:80vh;
+    overflow-y:auto;
+    box-shadow:0 0 0 1px rgba(201,161,90,0.2), 0 30px 70px rgba(0,0,0,0.6);
+  }
+  .leaderboard-close{
+    position:absolute; top:14px; right:16px;
+    background:none; border:none; color:var(--muted);
+    font-size:22px; line-height:1; cursor:pointer; padding:4px;
+  }
+  .leaderboard-close:hover{ color:var(--text); }
+  .leaderboard-eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:16px;
+    text-align:center;
+  }
+  .leaderboard-table{
+    width:100%;
+    border-collapse:collapse;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+  }
+  .leaderboard-table th{
+    text-align:left;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--muted);
+    padding:0 10px 8px;
+    border-bottom:1px solid var(--border);
+  }
+  .leaderboard-table th.sortable{ cursor:pointer; user-select:none; }
+  .leaderboard-table th.sortable:hover{ color:var(--gold-bright); }
+  .leaderboard-table th:last-child, .leaderboard-table td:last-child{ text-align:right; }
+  .leaderboard-table td{
+    padding:9px 10px;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    color:var(--text);
+  }
+  .leaderboard-table tr:last-child td{ border-bottom:none; }
+  .leaderboard-rank{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--muted);
+    width:28px;
+  }
+  .leaderboard-table tr:nth-child(1) .leaderboard-rank{ color:var(--gold-bright); }
+  .leaderboard-contribution{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--gold-bright);
+  }
+  .leaderboard-empty{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--muted-dim);
+    padding:20px 0 4px;
+    text-align:center;
   }
 
   /* ---------- Login modal ---------- */
@@ -826,15 +1052,47 @@
 <body>
 
 <div class="banner">
-  <button class="clannie-btn" id="clannieBtn">🏆 Clannie of the Month</button>
+  <button class="corner-btn clannie-btn" id="clannieBtn">🏆 Clannie of the Month</button>
+  <button class="corner-btn leaderboard-btn" id="leaderboardBtn">📊 Leaderboard</button>
   <div class="eyebrow">Clan Progress · Live Ledger</div>
   <h1>Clan Bingo</h1>
   <p class="sub">Every drop, broadcast, and kill logged toward the clan's collection goals. Progress updates as contributions come in.</p>
   <button class="spin-btn" id="openWheelBtn">🎡 Spin for a random task</button>
 </div>
 
+<div class="toolbar-row">
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search tasks…" autocomplete="off">
+    <button class="search-clear" id="searchClear">&times;</button>
+  </div>
+  <select class="completion-select" id="completionFilter">
+    <option value="all">All progress</option>
+    <option value="0">Not started (0%)</option>
+    <option value="1-24">1–24%</option>
+    <option value="25-49">25–49%</option>
+    <option value="50-74">50–74%</option>
+    <option value="75-99">75–99%</option>
+    <option value="100">Completed (100%)</option>
+  </select>
+  <select class="completion-select" id="sortOrder">
+    <option value="default">Default order</option>
+    <option value="az">Name (A–Z)</option>
+    <option value="za">Name (Z–A)</option>
+  </select>
+</div>
 <div class="filter-bar" id="filterBar"></div>
 <datalist id="categoryOptions"></datalist>
+
+<div class="proof-rotator" id="proofRotator">
+  <div class="proof-rotator-label">📸 Recent proof</div>
+  <div class="proof-rotator-frame" id="proofRotatorFrame">
+    <img id="proofRotatorImg" src="" alt="">
+    <div class="proof-rotator-caption" id="proofRotatorCaption"></div>
+    <button class="proof-rotator-nav prev" id="proofRotatorPrev">&#8249;</button>
+    <button class="proof-rotator-nav next" id="proofRotatorNext">&#8250;</button>
+  </div>
+  <div class="proof-rotator-dots" id="proofRotatorDots"></div>
+</div>
 
 <div class="grid" id="grid"></div>
 
@@ -896,6 +1154,14 @@
   </div>
 </div>
 
+<div class="leaderboard-overlay" id="leaderboardOverlay">
+  <div class="leaderboard-box">
+    <button class="leaderboard-close" id="leaderboardClose">&times;</button>
+    <div class="leaderboard-eyebrow">Leaderboard</div>
+    <div id="leaderboardContent"></div>
+  </div>
+</div>
+
 <footer>UPDATED MANUALLY BY DADDY JARRA &nbsp;·&nbsp; PROGRESS SYNCS LIVE FOR EVERYONE</footer>
 
 <div class="pc-overlay" id="pcOverlay">
@@ -931,6 +1197,16 @@
       <label>Image URL</label>
       <input type="text" id="clannieImageInput" placeholder="https://...">
     </div>
+
+    <div class="divider"></div>
+
+    <p class="section-label">Leaderboard</p>
+    <p class="hint" id="leaderboardHint">Columns expected: Player Name, Contribution. Uploading a new sheet replaces the entire leaderboard.</p>
+    <div class="field">
+      <input type="file" id="leaderboardFileInput" accept=".xlsx,.xls,.csv" style="width:100%; background:#0c0e13; border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:12px; padding:8px 10px;">
+    </div>
+    <button class="btn secondary" id="leaderboardImportBtn" disabled>Update leaderboard</button>
+    <div class="status" id="leaderboardImportStatus" style="font-family:'JetBrains Mono',monospace; font-size:11px; text-align:center; margin-top:8px; min-height:14px;"></div>
 
     <div class="divider"></div>
 
@@ -1013,6 +1289,7 @@ const db = getFirestore(app);
 const tasksCol = collection(db, 'tasks');
 const submissionsCol = collection(db, 'submissions');
 const clannieRef = doc(db, 'settings', 'clannie');
+const leaderboardRef = doc(db, 'settings', 'leaderboard');
 
 const PALETTE = [
   ["#12314a","#1e4a6b"],["#2a1030","#4a1c4f"],["#0f2f3a","#1a4c5c"],
@@ -1035,6 +1312,9 @@ let isAdmin = false;
 let allSubmissions = []; // in-memory mirror of the 'submissions' collection
 let currentTaskId = null; // task currently open in the detail modal
 let activeCategory = 'All';
+let searchQuery = '';
+let completionFilter = 'all';
+let sortOrder = 'default';
 let clannieData = { name: '', image: '' };
 
 function escapeHtml(s){
@@ -1076,12 +1356,45 @@ function renderFilterBar(){
 
 function renderGrid(){
   const grid = document.getElementById('grid');
-  const visible = activeCategory === 'All'
+  let visible = activeCategory === 'All'
     ? tasks
     : tasks.filter(t => (t.category || '').trim() === activeCategory);
 
+  const q = searchQuery.trim().toLowerCase();
+  if(q){
+    visible = visible.filter(t =>
+      (t.name || '').toLowerCase().includes(q) ||
+      (t.description || '').toLowerCase().includes(q) ||
+      (t.category || '').toLowerCase().includes(q)
+    );
+  }
+
+  if(completionFilter !== 'all'){
+    visible = visible.filter(t => {
+      const target = Number(t.target) || 1;
+      const progress = Number(t.progress) || 0;
+      const pct = Math.max(0, Math.min(100, Math.round((progress / target) * 100)));
+      switch(completionFilter){
+        case '0': return pct === 0;
+        case '1-24': return pct >= 1 && pct <= 24;
+        case '25-49': return pct >= 25 && pct <= 49;
+        case '50-74': return pct >= 50 && pct <= 74;
+        case '75-99': return pct >= 75 && pct <= 99;
+        case '100': return pct >= 100;
+        default: return true;
+      }
+    });
+  }
+
+  if(sortOrder === 'az'){
+    visible = [...visible].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  } else if(sortOrder === 'za'){
+    visible = [...visible].sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+  }
+
   if(visible.length === 0){
-    grid.innerHTML = `<div class="empty">${tasks.length === 0 ? 'No tasks yet.' : 'No tasks in this category yet.'}</div>`;
+    const noneMsg = (q || completionFilter !== 'all') ? 'No tasks match your filters.' : (tasks.length === 0 ? 'No tasks yet.' : 'No tasks in this category yet.');
+    grid.innerHTML = `<div class="empty">${noneMsg}</div>`;
     return;
   }
   grid.innerHTML = '';
@@ -1737,7 +2050,103 @@ onSnapshot(submissionsCol, (snap) => {
   allSubmissions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   renderGrid(); // photo counts on cards
   if(currentTaskId) renderGallery();
+  refreshRotator();
 }, (err) => console.error('submissions listen error', err));
+
+/* ---------- Recent proof rotator ---------- */
+let rotatorItems = [];
+let rotatorIndex = 0;
+let rotatorTimer = null;
+
+function buildRotatorItems(){
+  return allSubmissions
+    .filter(s => s.status === 'approved' && s.imageUrl)
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    .map(s => ({
+      imageUrl: s.imageUrl,
+      taskId: s.taskId,
+      taskName: s.taskName || 'Task',
+      submittedBy: s.submittedBy || 'Leadership'
+    }));
+}
+
+function refreshRotator(){
+  rotatorItems = buildRotatorItems();
+  const wrap = document.getElementById('proofRotator');
+
+  if(rotatorItems.length === 0){
+    wrap.classList.remove('show');
+    clearInterval(rotatorTimer);
+    rotatorTimer = null;
+    return;
+  }
+
+  wrap.classList.add('show');
+  if(rotatorIndex >= rotatorItems.length) rotatorIndex = 0;
+  renderRotatorDots();
+  showRotatorSlide(rotatorIndex, false);
+  if(!rotatorTimer) startRotatorTimer();
+}
+
+function renderRotatorDots(){
+  const dotsWrap = document.getElementById('proofRotatorDots');
+  if(rotatorItems.length > 1 && rotatorItems.length <= 15){
+    dotsWrap.style.display = '';
+    dotsWrap.innerHTML = rotatorItems.map((_, i) =>
+      `<div class="proof-rotator-dot${i === rotatorIndex ? ' active' : ''}" data-i="${i}"></div>`
+    ).join('');
+    dotsWrap.querySelectorAll('.proof-rotator-dot').forEach(dot => {
+      dot.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showRotatorSlide(Number(dot.dataset.i), true);
+      });
+    });
+  } else {
+    dotsWrap.style.display = 'none';
+    dotsWrap.innerHTML = '';
+  }
+}
+
+function showRotatorSlide(idx, userInitiated){
+  if(rotatorItems.length === 0) return;
+  rotatorIndex = ((idx % rotatorItems.length) + rotatorItems.length) % rotatorItems.length;
+  const item = rotatorItems[rotatorIndex];
+
+  const img = document.getElementById('proofRotatorImg');
+  img.classList.remove('show');
+  const tmp = new Image();
+  tmp.onload = () => { img.src = item.imageUrl; requestAnimationFrame(() => img.classList.add('show')); };
+  tmp.onerror = () => { img.src = item.imageUrl; requestAnimationFrame(() => img.classList.add('show')); };
+  tmp.src = item.imageUrl;
+
+  document.getElementById('proofRotatorCaption').innerHTML =
+    `<div class="rtask">${escapeHtml(item.taskName)}</div><div class="rby">Attached by ${escapeHtml(item.submittedBy)}</div>`;
+
+  document.querySelectorAll('.proof-rotator-dot').forEach((dot, i) => {
+    dot.classList.toggle('active', i === rotatorIndex);
+  });
+
+  if(userInitiated) startRotatorTimer(); // manual navigation resets the auto-advance clock
+}
+
+function startRotatorTimer(){
+  clearInterval(rotatorTimer);
+  rotatorTimer = setInterval(() => showRotatorSlide(rotatorIndex + 1, false), 4500);
+}
+
+document.getElementById('proofRotatorFrame').addEventListener('click', (e) => {
+  if(e.target.closest('.proof-rotator-nav')) return;
+  if(rotatorItems.length === 0) return;
+  openTaskModal(rotatorItems[rotatorIndex].taskId);
+});
+document.getElementById('proofRotatorPrev').addEventListener('click', (e) => {
+  e.stopPropagation();
+  showRotatorSlide(rotatorIndex - 1, true);
+});
+document.getElementById('proofRotatorNext').addEventListener('click', (e) => {
+  e.stopPropagation();
+  showRotatorSlide(rotatorIndex + 1, true);
+});
 
 /* ---------- Clannie of the Month ---------- */
 const clannieOverlay = document.getElementById('clannieOverlay');
@@ -1780,8 +2189,164 @@ onSnapshot(clannieRef, (snap) => {
   if(document.activeElement !== clannieImageInput) clannieImageInput.value = clannieData.image || '';
 }, (err) => console.error('clannie listen error', err));
 
+/* ---------- Leaderboard ---------- */
+const leaderboardOverlay = document.getElementById('leaderboardOverlay');
+let leaderboardData = { entries: [] };
+
+let leaderboardSort = { field: 'contribution', dir: 'desc' };
+
+function renderLeaderboardModal(){
+  const content = document.getElementById('leaderboardContent');
+  const { field, dir } = leaderboardSort;
+  const entries = [...(leaderboardData.entries || [])].sort((a, b) => {
+    let cmp;
+    if(field === 'name'){
+      cmp = (a.name || '').localeCompare(b.name || '');
+    } else {
+      cmp = (Number(a.contribution) || 0) - (Number(b.contribution) || 0);
+    }
+    return dir === 'asc' ? cmp : -cmp;
+  });
+
+  if(entries.length === 0){
+    content.innerHTML = `<div class="leaderboard-empty">No leaderboard data yet.</div>`;
+    return;
+  }
+
+  const arrow = (col) => field === col ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
+
+  content.innerHTML = `
+    <table class="leaderboard-table">
+      <thead><tr>
+        <th>#</th>
+        <th class="sortable" data-sort="name">Player${arrow('name')}</th>
+        <th class="sortable" data-sort="contribution">Contribution${arrow('contribution')}</th>
+      </tr></thead>
+      <tbody>
+        ${entries.map((e, i) => `
+          <tr>
+            <td class="leaderboard-rank">${i + 1}</td>
+            <td>${escapeHtml(e.name)}</td>
+            <td class="leaderboard-contribution">${(Number(e.contribution) || 0).toLocaleString()}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+
+  content.querySelectorAll('.leaderboard-table th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if(leaderboardSort.field === col){
+        leaderboardSort.dir = leaderboardSort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        leaderboardSort = { field: col, dir: col === 'name' ? 'asc' : 'desc' };
+      }
+      renderLeaderboardModal();
+    });
+  });
+}
+
+function openLeaderboard(){ renderLeaderboardModal(); leaderboardOverlay.classList.add('open'); }
+function closeLeaderboard(){ leaderboardOverlay.classList.remove('open'); }
+document.getElementById('leaderboardBtn').addEventListener('click', openLeaderboard);
+document.getElementById('leaderboardClose').addEventListener('click', closeLeaderboard);
+leaderboardOverlay.addEventListener('click', (e) => { if(e.target.id === 'leaderboardOverlay') closeLeaderboard(); });
+
+onSnapshot(leaderboardRef, (snap) => {
+  leaderboardData = snap.exists() ? snap.data() : { entries: [] };
+}, (err) => console.error('leaderboard listen error', err));
+
+/* ---------- Leaderboard: admin spreadsheet upload ---------- */
+let leaderboardParsedEntries = [];
+const leaderboardFileInput = document.getElementById('leaderboardFileInput');
+const leaderboardImportBtn = document.getElementById('leaderboardImportBtn');
+const leaderboardImportStatus = document.getElementById('leaderboardImportStatus');
+
+leaderboardFileInput.addEventListener('change', () => {
+  leaderboardParsedEntries = [];
+  leaderboardImportBtn.disabled = true;
+  leaderboardImportStatus.textContent = '';
+  const file = leaderboardFileInput.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+      leaderboardParsedEntries = rows.map(row => ({
+        name: String(getField(row, 'player name', 'name', 'player')).trim(),
+        contribution: Number(getField(row, 'contribution', 'points', 'score')) || 0
+      })).filter(e => e.name);
+
+      if(leaderboardParsedEntries.length === 0){
+        leaderboardImportStatus.style.color = 'var(--danger)';
+        leaderboardImportStatus.textContent = 'No valid rows found — check the column headers (Player Name, Contribution).';
+      } else {
+        leaderboardImportStatus.style.color = 'var(--muted)';
+        leaderboardImportStatus.textContent = `Parsed ${leaderboardParsedEntries.length} player${leaderboardParsedEntries.length === 1 ? '' : 's'} — ready to update.`;
+        leaderboardImportBtn.disabled = false;
+      }
+    }catch(err){
+      console.error(err);
+      leaderboardImportStatus.style.color = 'var(--danger)';
+      leaderboardImportStatus.textContent = 'Could not read that file: ' + err.message;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+async function runLeaderboardImport(){
+  if(leaderboardParsedEntries.length === 0) return;
+  leaderboardImportBtn.disabled = true;
+  leaderboardImportStatus.style.color = 'var(--muted)';
+  leaderboardImportStatus.textContent = 'Updating…';
+  try{
+    await setDoc(leaderboardRef, { entries: leaderboardParsedEntries, updatedAt: Date.now() });
+    leaderboardImportStatus.style.color = 'var(--ok, #7fae6f)';
+    leaderboardImportStatus.textContent = `Leaderboard updated with ${leaderboardParsedEntries.length} player${leaderboardParsedEntries.length === 1 ? '' : 's'}.`;
+    leaderboardParsedEntries = [];
+    leaderboardFileInput.value = '';
+  }catch(err){
+    console.error(err);
+    leaderboardImportStatus.style.color = 'var(--danger)';
+    leaderboardImportStatus.textContent = 'Update failed: ' + err.message;
+    leaderboardImportBtn.disabled = false;
+  }
+}
+leaderboardImportBtn.addEventListener('click', runLeaderboardImport);
+
 
 /* ---------- Init ---------- */
+const searchInput = document.getElementById('searchInput');
+const searchClear = document.getElementById('searchClear');
+searchInput.addEventListener('input', () => {
+  searchQuery = searchInput.value;
+  searchClear.classList.toggle('show', searchQuery.length > 0);
+  renderGrid();
+});
+searchClear.addEventListener('click', () => {
+  searchQuery = '';
+  searchInput.value = '';
+  searchClear.classList.remove('show');
+  renderGrid();
+  searchInput.focus();
+});
+
+document.getElementById('completionFilter').addEventListener('change', (e) => {
+  completionFilter = e.target.value;
+  renderGrid();
+});
+
+document.getElementById('sortOrder').addEventListener('change', (e) => {
+  sortOrder = e.target.value;
+  renderGrid();
+});
+
 seedDefaultsIfEmpty().catch(err => console.error('seed error', err));
 </script>
 </body>
