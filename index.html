@@ -101,6 +101,7 @@
     border-radius:10px;
     overflow:hidden;
     position:relative;
+    cursor:pointer;
     transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
   }
   .card:hover{
@@ -575,8 +576,8 @@
     color:var(--muted-dim);
   }
 
-  /* ---------- Photo button on cards ---------- */
-  .photo-btn{
+  /* ---------- Photo indicator on cards ---------- */
+  .photo-indicator{
     width:100%;
     margin-top:10px;
     background:var(--panel);
@@ -587,10 +588,9 @@
     letter-spacing:0.02em;
     padding:8px;
     border-radius:6px;
-    cursor:pointer;
-    transition:border-color .15s, color .15s;
+    text-align:center;
+    box-sizing:border-box;
   }
-  .photo-btn:hover{ border-color:var(--gold); color:var(--gold-bright); }
 
   /* ---------- Task detail modal ---------- */
   .task-overlay{
@@ -780,6 +780,10 @@
 
       <input type="text" id="uploadUrlInput" placeholder="https://... image URL" style="width:100%; background:#0c0e13; border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'Inter',sans-serif; font-size:13px; padding:9px 10px;">
       <img class="upload-preview" id="uploadPreview" alt="">
+
+      <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:5px; margin-top:10px; font-family:'JetBrains Mono',monospace;">Add to progress count</label>
+      <input type="number" id="uploadAmountInput" value="1" min="0" style="width:100%; background:#0c0e13; border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; padding:9px 10px;">
+
       <button class="btn" id="uploadSubmitBtn">Attach photo</button>
       <div class="upload-status" id="uploadStatus"></div>
     </div>
@@ -986,7 +990,7 @@ function renderGrid(){
 
     const catBadge = t.category ? `<div class="cat-badge">${escapeHtml(t.category)}</div><br>` : '';
     const photoCount = allSubmissions.filter(s => s.taskId === t.id && (isAdmin || s.status === 'approved')).length;
-    const showPhotoBtn = isAdmin || photoCount > 0;
+    const showPhotoIndicator = isAdmin || photoCount > 0;
     const photoLabel = isAdmin
       ? (photoCount === 0 ? 'Add proof' : `${photoCount} photo${photoCount === 1 ? '' : 's'}`)
       : `${photoCount} photo${photoCount === 1 ? '' : 's'}`;
@@ -1004,15 +1008,10 @@ function renderGrid(){
           <span class="count">${progress.toLocaleString()}<span class="of">/${target.toLocaleString()}</span></span>
           <span class="pct">${pct}%</span>
         </div>
-        ${showPhotoBtn ? `<button class="photo-btn" data-id="${t.id}">📷 ${photoLabel}</button>` : ''}
+        ${showPhotoIndicator ? `<div class="photo-indicator">📷 ${photoLabel}</div>` : ''}
       </div>
     `;
-    if(showPhotoBtn){
-      card.querySelector('.photo-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        openTaskModal(t.id);
-      });
-    }
+    card.addEventListener('click', () => openTaskModal(t.id));
     grid.appendChild(card);
   });
 }
@@ -1140,11 +1139,23 @@ onSnapshot(tasksCol, (snap) => {
   renderFilterBar();
   renderGrid();
   if(isAdmin) renderManageList();
+  if(currentTaskId) refreshTaskModalStats();
 }, (err) => {
   console.error('Firestore listen error', err);
   document.getElementById('grid').innerHTML =
     '<div class="empty">Could not load data — check the Firebase config in this file.</div>';
 });
+
+function refreshTaskModalStats(){
+  const t = tasks.find(x => x.id === currentTaskId);
+  if(!t) return;
+  const target = Number(t.target) || 1;
+  const progress = Number(t.progress) || 0;
+  const pct = Math.max(0, Math.min(100, Math.round((progress / target) * 100)));
+  document.getElementById('taskModalBarFill').style.width = pct + '%';
+  document.getElementById('taskModalStats').textContent =
+    `${progress.toLocaleString()} / ${target.toLocaleString()} · ${pct}%`;
+}
 
 /* ---------- Hidden admin access ---------- */
 const TRIGGER_WORD = 'ledger';
@@ -1449,6 +1460,7 @@ function openTaskModal(taskId){
   }
 
   document.getElementById('uploadUrlInput').value = '';
+  document.getElementById('uploadAmountInput').value = '1';
   document.getElementById('uploadPreview').style.display = 'none';
   document.getElementById('uploadStatus').textContent = '';
   document.getElementById('uploadSection').style.display = isAdmin ? '' : 'none';
@@ -1571,6 +1583,8 @@ document.getElementById('uploadSubmitBtn').addEventListener('click', async () =>
   const imageUrl = uploadUrlInput.value.trim();
   if(!imageUrl){ setUploadStatus('Please paste an image URL first.', 'err'); return; }
 
+  const amount = Math.max(0, Number(document.getElementById('uploadAmountInput').value) || 0);
+
   btn.disabled = true;
   setUploadStatus('Attaching…', '');
 
@@ -1579,9 +1593,13 @@ document.getElementById('uploadSubmitBtn').addEventListener('click', async () =>
       taskId: t.id, taskName: t.name, submittedBy, imageUrl,
       status: 'approved', createdAt: Date.now()
     });
+    if(amount > 0){
+      await updateDoc(doc(db, 'tasks', t.id), { progress: increment(amount) });
+    }
 
-    setUploadStatus('Photo attached.', 'ok');
+    setUploadStatus(amount > 0 ? `Photo attached, progress +${amount}.` : 'Photo attached.', 'ok');
     uploadUrlInput.value = '';
+    document.getElementById('uploadAmountInput').value = '1';
     uploadPreview.style.display = 'none';
   }catch(err){
     console.error(err);
