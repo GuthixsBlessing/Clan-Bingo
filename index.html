@@ -76,6 +76,26 @@
     line-height:1.5;
   }
 
+  .clannie-btn{
+    position:absolute;
+    top:20px; right:24px;
+    z-index:1;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:0.03em;
+    color:var(--gold-bright);
+    background:rgba(201,161,90,0.1);
+    border:1px solid rgba(201,161,90,0.35);
+    padding:8px 14px;
+    border-radius:16px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .clannie-btn:hover{ border-color:var(--gold); background:rgba(201,161,90,0.18); }
+  @media(max-width:640px){
+    .clannie-btn{ position:static; display:inline-block; margin-bottom:16px; }
+  }
+
   /* ---------- Grid ---------- */
   .grid{
     max-width:1280px;
@@ -405,6 +425,63 @@
     .barfill, .card, .drawer{transition:none;}
   }
 
+  /* ---------- Clannie of the Month modal ---------- */
+  .clannie-overlay{
+    position:fixed; inset:0;
+    background:rgba(4,5,8,0.82);
+    z-index:52;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .clannie-overlay.open{ display:flex; }
+  .clannie-box{
+    position:relative;
+    background:var(--panel-raised);
+    border:1px solid var(--gold);
+    border-radius:14px;
+    padding:30px 26px 26px;
+    width:min(360px, 100%);
+    text-align:center;
+    box-shadow:0 0 0 1px rgba(201,161,90,0.2), 0 30px 70px rgba(0,0,0,0.6);
+  }
+  .clannie-close{
+    position:absolute; top:14px; right:16px;
+    background:none; border:none; color:var(--muted);
+    font-size:22px; line-height:1; cursor:pointer; padding:4px;
+  }
+  .clannie-close:hover{ color:var(--text); }
+  .clannie-eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:14px;
+  }
+  .clannie-image{
+    width:150px; height:150px;
+    border-radius:50%;
+    object-fit:cover;
+    border:2px solid var(--gold);
+    box-shadow:0 0 0 4px var(--void), 0 10px 30px rgba(0,0,0,0.5);
+    margin:0 auto 18px;
+    display:block;
+    background:var(--panel);
+  }
+  .clannie-name{
+    font-family:'Cinzel',serif;
+    font-size:21px;
+    color:var(--gold-bright);
+  }
+  .clannie-empty{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--muted-dim);
+    padding:20px 0 4px;
+  }
+
   /* ---------- Login modal ---------- */
   .pc-overlay{
     position:fixed; inset:0;
@@ -545,6 +622,12 @@
     border-radius:10px;
     padding:16px;
     box-shadow:0 0 0 1px rgba(201,161,90,0.2), 0 14px 30px -14px rgba(201,161,90,0.3);
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .wheel-winner:hover{
+    transform:translateY(-2px);
+    box-shadow:0 0 0 1px rgba(201,161,90,0.35), 0 18px 34px -14px rgba(201,161,90,0.45);
   }
   .wheel-winner .wcat{
     font-family:'JetBrains Mono',monospace;
@@ -569,6 +652,13 @@
     font-family:'JetBrains Mono',monospace;
     font-size:12px;
     color:var(--muted);
+  }
+  .wheel-winner .whint{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.04em;
+    color:var(--muted-dim);
+    margin-top:8px;
   }
   .wheel-empty{
     font-family:'JetBrains Mono',monospace;
@@ -736,6 +826,7 @@
 <body>
 
 <div class="banner">
+  <button class="clannie-btn" id="clannieBtn">🏆 Clannie of the Month</button>
   <div class="eyebrow">Clan Progress · Live Ledger</div>
   <h1>Clan Bingo</h1>
   <p class="sub">Every drop, broadcast, and kill logged toward the clan's collection goals. Progress updates as contributions come in.</p>
@@ -797,6 +888,14 @@
   <img id="lightboxImg" src="" alt="">
 </div>
 
+<div class="clannie-overlay" id="clannieOverlay">
+  <div class="clannie-box">
+    <button class="clannie-close" id="clannieClose">&times;</button>
+    <div class="clannie-eyebrow">Clannie of the Month</div>
+    <div id="clannieContent"></div>
+  </div>
+</div>
+
 <footer>UPDATED MANUALLY BY DADDY JARRA &nbsp;·&nbsp; PROGRESS SYNCS LIVE FOR EVERYONE</footer>
 
 <div class="pc-overlay" id="pcOverlay">
@@ -822,6 +921,18 @@
       <span>Logged in as <span class="email" id="whoEmail"></span></span>
       <button id="signOutBtn">Sign out</button>
     </div>
+
+    <p class="section-label">Clannie of the month<span class="save-flash" id="clannieSaveFlash">saved ✓</span></p>
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="clannieNameInput" placeholder="e.g. Zezima">
+    </div>
+    <div class="field">
+      <label>Image URL</label>
+      <input type="text" id="clannieImageInput" placeholder="https://...">
+    </div>
+
+    <div class="divider"></div>
 
     <p class="section-label">Add a new task</p>
     <div class="field">
@@ -878,7 +989,7 @@ import {
   getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, setDoc,
   onSnapshot, getDocs, writeBatch, query, where, increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -901,6 +1012,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const tasksCol = collection(db, 'tasks');
 const submissionsCol = collection(db, 'submissions');
+const clannieRef = doc(db, 'settings', 'clannie');
 
 const PALETTE = [
   ["#12314a","#1e4a6b"],["#2a1030","#4a1c4f"],["#0f2f3a","#1a4c5c"],
@@ -923,6 +1035,7 @@ let isAdmin = false;
 let allSubmissions = []; // in-memory mirror of the 'submissions' collection
 let currentTaskId = null; // task currently open in the detail modal
 let activeCategory = 'All';
+let clannieData = { name: '', image: '' };
 
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -1113,8 +1226,8 @@ async function addTask(){
   }catch(err){ console.error(err); alert('Could not add task: ' + err.message); }
 }
 
-function flashSaved(){
-  const el = document.getElementById('saveFlash');
+function flashSaved(elId){
+  const el = document.getElementById(elId || 'saveFlash');
   el.classList.add('show');
   clearTimeout(flashSaved._t);
   flashSaved._t = setTimeout(()=>el.classList.remove('show'), 1200);
@@ -1334,12 +1447,17 @@ function showWinner(t){
   const progress = Number(t.progress) || 0;
   const result = document.getElementById('wheelResult');
   result.innerHTML = `
-    <div class="wheel-winner">
+    <div class="wheel-winner" id="wheelWinnerCard">
       ${t.category ? `<div class="wcat">${escapeHtml(t.category)}</div>` : ''}
       <div class="wname">${escapeHtml(t.name)}</div>
       <div class="wprogress">${progress.toLocaleString()} / ${target.toLocaleString()}</div>
+      <div class="whint">Click to view this task &rarr;</div>
     </div>
   `;
+  document.getElementById('wheelWinnerCard').addEventListener('click', () => {
+    closeWheel();
+    openTaskModal(t.id);
+  });
 }
 
 document.getElementById('openWheelBtn').addEventListener('click', openWheel);
@@ -1620,6 +1738,47 @@ onSnapshot(submissionsCol, (snap) => {
   renderGrid(); // photo counts on cards
   if(currentTaskId) renderGallery();
 }, (err) => console.error('submissions listen error', err));
+
+/* ---------- Clannie of the Month ---------- */
+const clannieOverlay = document.getElementById('clannieOverlay');
+const clannieNameInput = document.getElementById('clannieNameInput');
+const clannieImageInput = document.getElementById('clannieImageInput');
+
+function renderClannieModal(){
+  const content = document.getElementById('clannieContent');
+  if(clannieData.name && clannieData.name.trim()){
+    content.innerHTML = `
+      ${clannieData.image ? `<img class="clannie-image" src="${escapeAttr(clannieData.image)}" alt="" onerror="this.style.display='none'">` : ''}
+      <div class="clannie-name">${escapeHtml(clannieData.name)}</div>
+    `;
+  } else {
+    content.innerHTML = `<div class="clannie-empty">Not announced yet — check back soon!</div>`;
+  }
+}
+
+function openClannie(){ renderClannieModal(); clannieOverlay.classList.add('open'); }
+function closeClannie(){ clannieOverlay.classList.remove('open'); }
+document.getElementById('clannieBtn').addEventListener('click', openClannie);
+document.getElementById('clannieClose').addEventListener('click', closeClannie);
+clannieOverlay.addEventListener('click', (e) => { if(e.target.id === 'clannieOverlay') closeClannie(); });
+
+async function saveClannie(){
+  try{
+    await setDoc(clannieRef, {
+      name: clannieNameInput.value.trim(),
+      image: clannieImageInput.value.trim()
+    }, { merge: true });
+    flashSaved('clannieSaveFlash');
+  }catch(err){ console.error(err); alert('Could not save Clannie of the Month: ' + err.message); }
+}
+clannieNameInput.addEventListener('change', saveClannie);
+clannieImageInput.addEventListener('change', saveClannie);
+
+onSnapshot(clannieRef, (snap) => {
+  clannieData = snap.exists() ? snap.data() : { name: '', image: '' };
+  if(document.activeElement !== clannieNameInput) clannieNameInput.value = clannieData.name || '';
+  if(document.activeElement !== clannieImageInput) clannieImageInput.value = clannieData.image || '';
+}, (err) => console.error('clannie listen error', err));
 
 
 /* ---------- Init ---------- */
