@@ -449,6 +449,131 @@
     min-height:14px;
     margin-bottom:6px;
   }
+
+  /* ---------- Spin button ---------- */
+  .spin-btn{
+    margin-top:22px;
+    position:relative; z-index:1;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:0.03em;
+    color:var(--void);
+    background:linear-gradient(180deg, var(--gold-bright), var(--gold));
+    border:1px solid #8a6a34;
+    padding:11px 22px;
+    border-radius:22px;
+    cursor:pointer;
+    font-weight:700;
+    box-shadow:0 6px 18px -6px rgba(201,161,90,0.5);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .spin-btn:hover{ transform:translateY(-2px); box-shadow:0 10px 22px -6px rgba(201,161,90,0.6); }
+
+  /* ---------- Wheel modal ---------- */
+  .wheel-overlay{
+    position:fixed; inset:0;
+    background:rgba(4,5,8,0.85);
+    z-index:60;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .wheel-overlay.open{ display:flex; }
+  .wheel-box{
+    position:relative;
+    background:var(--panel-raised);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:30px 26px 26px;
+    width:min(400px, 100%);
+    text-align:center;
+    box-shadow:0 30px 70px rgba(0,0,0,0.6);
+  }
+  .wheel-box h3{
+    font-family:'Cinzel',serif;
+    font-size:19px;
+    margin:0 0 6px;
+    color:var(--gold-bright);
+  }
+  .wheel-sub{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--muted);
+    margin:0 0 20px;
+  }
+  .wheel-close{
+    position:absolute; top:14px; right:16px;
+    background:none; border:none; color:var(--muted);
+    font-size:22px; line-height:1; cursor:pointer; padding:4px;
+  }
+  .wheel-close:hover{ color:var(--text); }
+
+  .wheel-stage{
+    position:relative;
+    width:300px; height:300px;
+    margin:0 auto 22px;
+  }
+  .wheel-pointer{
+    position:absolute;
+    top:-6px; left:50%;
+    transform:translateX(-50%);
+    width:0; height:0;
+    border-left:12px solid transparent;
+    border-right:12px solid transparent;
+    border-top:20px solid var(--gold-bright);
+    z-index:2;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  }
+  .wheel-spinner{
+    width:300px; height:300px;
+    border-radius:50%;
+    border:4px solid var(--border);
+    box-shadow:0 0 0 4px var(--void), 0 10px 30px rgba(0,0,0,0.5);
+    overflow:hidden;
+  }
+  .wheel-spinner canvas{ display:block; }
+
+  .wheel-result{
+    min-height:20px;
+    margin-top:4px;
+  }
+  .wheel-winner{
+    background:var(--panel);
+    border:1px solid var(--gold);
+    border-radius:10px;
+    padding:16px;
+    box-shadow:0 0 0 1px rgba(201,161,90,0.2), 0 14px 30px -14px rgba(201,161,90,0.3);
+  }
+  .wheel-winner .wcat{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--gold-bright);
+    background:rgba(201,161,90,0.12);
+    border:1px solid rgba(201,161,90,0.3);
+    padding:3px 9px;
+    border-radius:10px;
+    display:inline-block;
+    margin-bottom:10px;
+  }
+  .wheel-winner .wname{
+    font-family:'Cinzel',serif;
+    font-size:16px;
+    color:var(--text);
+    margin-bottom:8px;
+  }
+  .wheel-winner .wprogress{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .wheel-empty{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--muted-dim);
+  }
 </style>
 </head>
 <body>
@@ -457,12 +582,32 @@
   <div class="eyebrow">Clan Progress · Live Ledger</div>
   <h1>Clan Bingo</h1>
   <p class="sub">Every drop, broadcast, and kill logged toward the clan's collection goals. Progress updates as contributions come in.</p>
+  <button class="spin-btn" id="openWheelBtn">🎡 Spin for a random task</button>
 </div>
 
 <div class="filter-bar" id="filterBar"></div>
 <datalist id="categoryOptions"></datalist>
 
 <div class="grid" id="grid"></div>
+
+<div class="wheel-overlay" id="wheelOverlay">
+  <div class="wheel-box">
+    <button class="wheel-close" id="wheelClose">&times;</button>
+    <h3>Wheel of Tasks</h3>
+    <p class="wheel-sub" id="wheelSub">Spin to pick something to work on next</p>
+
+    <div class="wheel-stage">
+      <div class="wheel-pointer"></div>
+      <div class="wheel-spinner" id="wheelSpinner">
+        <canvas id="wheelCanvas" width="300" height="300"></canvas>
+      </div>
+    </div>
+
+    <button class="btn" id="spinBtn">Spin the wheel</button>
+
+    <div class="wheel-result" id="wheelResult"></div>
+  </div>
+</div>
 
 <footer>UPDATED MANUALLY BY DADDY JARRA &nbsp;·&nbsp; PROGRESS SYNCS LIVE FOR EVERYONE</footer>
 
@@ -515,6 +660,13 @@
     </div>
     <p class="hint">Paste a direct link to an image (right-click an image online → "copy image address"). Leave blank to use a plain emblem instead.</p>
     <button class="btn" id="addTaskBtn">Add task</button>
+
+    <div class="divider"></div>
+
+    <p class="section-label">Bulk import</p>
+    <p class="hint" id="importHint">Loaded: 79 tasks (Achievement, Bossing, Clueing, Combat Achievement, Misc, Skilling, Slayer, XP). Importing adds them alongside whatever's already here — it won't delete anything.</p>
+    <button class="btn secondary" id="importBtn">Import the loaded task list</button>
+    <div class="status" id="importStatus" style="font-family:'JetBrains Mono',monospace; font-size:11px; text-align:center; margin-top:8px; min-height:14px;"></div>
 
     <div class="divider"></div>
 
@@ -841,6 +993,164 @@ function closeDrawer(){ drawer.classList.remove('open'); overlay.classList.remov
 document.getElementById('closeDrawer').addEventListener('click', closeDrawer);
 overlay.addEventListener('click', closeDrawer);
 document.getElementById('addTaskBtn').addEventListener('click', addTask);
+
+/* ---------- Wheel of Tasks ---------- */
+const WHEEL_COLORS = PALETTE.map(([c1, c2]) => c2); // brighter tone from each palette pair
+
+let wheelRotation = 0;
+let spinning = false;
+
+function getAvailableTasks(){
+  return tasks.filter(t => (Number(t.progress) || 0) < (Number(t.target) || 1));
+}
+
+function drawWheel(list){
+  const canvas = document.getElementById('wheelCanvas');
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+  const R = size / 2;
+  ctx.clearRect(0, 0, size, size);
+
+  if(list.length === 0) return;
+
+  const anglePerSeg = 360 / list.length;
+  list.forEach((t, i) => {
+    const startDeg = i * anglePerSeg - 90;
+    const endDeg = (i + 1) * anglePerSeg - 90;
+    const start = startDeg * Math.PI / 180;
+    const end = endDeg * Math.PI / 180;
+
+    ctx.beginPath();
+    ctx.moveTo(R, R);
+    ctx.arc(R, R, R - 3, start, end);
+    ctx.closePath();
+    ctx.fillStyle = WHEEL_COLORS[i % WHEEL_COLORS.length];
+    ctx.fill();
+    ctx.strokeStyle = '#090b10';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  // center hub
+  ctx.beginPath();
+  ctx.arc(R, R, 22, 0, Math.PI * 2);
+  ctx.fillStyle = '#12151d';
+  ctx.fill();
+  ctx.strokeStyle = '#c9a15a';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function openWheel(){
+  document.getElementById('wheelOverlay').classList.add('open');
+  document.getElementById('wheelResult').innerHTML = '';
+  const list = getAvailableTasks();
+  const spinBtn = document.getElementById('spinBtn');
+  const sub = document.getElementById('wheelSub');
+
+  if(list.length === 0){
+    sub.textContent = 'Everything is already complete — nothing left to spin for!';
+    spinBtn.disabled = true;
+  } else {
+    sub.textContent = 'Spin to pick something to work on next';
+    spinBtn.disabled = false;
+  }
+  drawWheel(list);
+}
+
+function closeWheel(){
+  document.getElementById('wheelOverlay').classList.remove('open');
+}
+
+function spinWheel(){
+  if(spinning) return;
+  const list = getAvailableTasks();
+  if(list.length === 0) return;
+
+  spinning = true;
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('wheelResult').innerHTML = '';
+
+  const spinner = document.getElementById('wheelSpinner');
+  const anglePerSeg = 360 / list.length;
+  const winnerIndex = Math.floor(Math.random() * list.length);
+  const winner = list[winnerIndex];
+
+  const centerAngle = winnerIndex * anglePerSeg + anglePerSeg / 2;
+  const jitter = (Math.random() - 0.5) * (anglePerSeg * 0.6);
+  const targetAngle = centerAngle + jitter;
+  const extraSpins = 6;
+  const finalRotation = extraSpins * 360 + (360 - targetAngle);
+
+  // reset instantly, then animate to the new target (keeps motion feeling continuous)
+  spinner.style.transition = 'none';
+  spinner.style.transform = `rotate(${wheelRotation % 360}deg)`;
+  // force reflow so the reset is applied before the animated spin starts
+  void spinner.offsetWidth;
+
+  spinner.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+  spinner.style.transform = `rotate(${finalRotation}deg)`;
+  wheelRotation = finalRotation;
+
+  spinner.addEventListener('transitionend', function onDone(){
+    spinner.removeEventListener('transitionend', onDone);
+    spinning = false;
+    document.getElementById('spinBtn').disabled = false;
+    showWinner(winner);
+  }, { once: true });
+}
+
+function showWinner(t){
+  const target = Number(t.target) || 1;
+  const progress = Number(t.progress) || 0;
+  const result = document.getElementById('wheelResult');
+  result.innerHTML = `
+    <div class="wheel-winner">
+      ${t.category ? `<div class="wcat">${escapeHtml(t.category)}</div>` : ''}
+      <div class="wname">${escapeHtml(t.name)}</div>
+      <div class="wprogress">${progress.toLocaleString()} / ${target.toLocaleString()}</div>
+    </div>
+  `;
+}
+
+document.getElementById('openWheelBtn').addEventListener('click', openWheel);
+document.getElementById('wheelClose').addEventListener('click', closeWheel);
+document.getElementById('wheelOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'wheelOverlay') closeWheel();
+});
+document.getElementById('spinBtn').addEventListener('click', spinWheel);
+
+const IMPORT_TASKS = [{"name": "Quest Cape / MQC / Comp / Trimmed", "category": "Achievement", "target": 2, "progress": 0, "image": "https://runescape.wiki/images/Quest_Cape_detail.png?62bfd"}, {"name": "75 Spikes or 5 Collections/Codexes", "category": "Bossing", "target": 75, "progress": 0, "image": "https://runescape.wiki/images/thumb/Vorkath_concept_art_1.jpg/507px-Vorkath_concept_art_1.jpg?74eb0"}, {"name": "2 Raksha Codexes or Spikes", "category": "Bossing", "target": 2, "progress": 0, "image": "https://runescape.wiki/images/thumb/Raksha_model_1.jpg/534px-Raksha_model_1.jpg?a7745"}, {"name": "2 Ode to Deceit or Roar of Awakening", "category": "Bossing", "target": 2, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5jOGofYeDnGQthqf0FoSl4dmN_O1bUi1Dkh5p1LNi9w&s=10"}, {"name": "5 Arch-Glacor Broadcasts", "category": "Bossing", "target": 5, "progress": 0, "image": "https://runescape.wiki/images/thumb/Leng_Concept_art.png/534px-Leng_Concept_art.png?4f2ce"}, {"name": "2 Nex: Angel of Death Broadcasts", "category": "Bossing", "target": 2, "progress": 0, "image": "https://pbs.twimg.com/media/D2gnbAqXgAAQ-5_.jpg"}, {"name": "10 Hearts, Jail Cell Keys, or Occultist's Rings", "category": "Bossing", "target": 10, "progress": 0, "image": "https://external-preview.redd.it/march-combat-update-rex-matriarchs-v0-2jfRIOGPjTI--WMYSEc8sIeTnCB0MYuCO3lqw0GPOlA.jpg?auto=webp&s=fe79a1ed18d8ef0055a700e9b55d94c4d7dd5c79"}, {"name": "3 Sigils", "category": "Bossing", "target": 3, "progress": 0, "image": "https://runescape.wiki/images/Legio_Primus.png?9cf02"}, {"name": "1 Full Noxious Weapon", "category": "Bossing", "target": 1, "progress": 0, "image": "https://static.wikia.nocookie.net/runescape2/images/8/86/Araxxor%27s_swipe_attack.png/revision/latest?cb=20140730204532"}, {"name": "2 Zuk Broadcasts", "category": "Bossing", "target": 2, "progress": 0, "image": "https://runescape.wiki/images/thumb/The_TzekHaar_Front_key_art.png/502px-The_TzekHaar_Front_key_art.png?66d7e"}, {"name": "7 Raids Broadcasts", "category": "Bossing", "target": 7, "progress": 0, "image": "https://runescape.wiki/images/thumb/Beastmaster_Durzag_concept_art.png/493px-Beastmaster_Durzag_concept_art.png?cdf75"}, {"name": "2 Fractured Staff of Armadyl Pieces", "category": "Bossing", "target": 2, "progress": 0, "image": "https://runescape.wiki/images/thumb/Kerapac_Steam_trading_card_wallpaper.jpg/534px-Kerapac_Steam_trading_card_wallpaper.jpg?c3cdc"}, {"name": "500 Ancient Scales", "category": "Bossing", "target": 500, "progress": 0, "image": "https://i.ytimg.com/vi/MgmMVvXF-uU/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLB3sxpUurJh6Hup68ZcB_dbhZz2Lg"}, {"name": "1 Shard of Genesis Essence", "category": "Bossing", "target": 1, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWu3cvGrWcznmOJ4pBIkw2DiVONdOPrxN55piPuHjgsA&s=10"}, {"name": "5 Rasial Broadcasts", "category": "Bossing", "target": 5, "progress": 0, "image": "https://runescape.wiki/images/Crown_of_the_First_Necromancer_detail.png?c607d"}, {"name": "1 Eldritch Crossbow Piece", "category": "Bossing", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/thumb/The_Shadow_Reef_wallpaper.jpg/569px-The_Shadow_Reef_wallpaper.jpg?51ed0"}, {"name": "5 Drygore Weapons", "category": "Bossing", "target": 5, "progress": 0, "image": "https://preview.redd.it/what-is-it-with-the-kalphite-king-v0-5kaw7336kk8e1.png?width=650&format=png&auto=webp&s=949dda2d719ab6bbe5ffd948f6b078705f4f1550"}, {"name": "20 GWD2 Broadcasts", "category": "Bossing", "target": 20, "progress": 0, "image": "https://runescape.wiki/images/God_Wars_Dungeon_2_update_post_header.jpg?678fc"}, {"name": "2 Amascut Broadcasts", "category": "Bossing", "target": 2, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfv6esJASi6gKBMtZOQzlRKSGCCV7sHAyFO-k3qiAQ0F89u2G7BFCiLBH-&s=10"}, {"name": "2 Solak Broadcasts", "category": "Bossing", "target": 2, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQtig5GIq5WgU8_pMTPqjQBl_prSPLFr6pIV-oWy8x3A&s=10"}, {"name": "2 ED2 Codexes", "category": "Bossing", "target": 2, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNqAXeMeKHVWBbLTrWdvYxCI4LlYZfbbsbOuCYSrzhsQ&s=10"}, {"name": "3 Rise of the Six Broadcasts", "category": "Bossing", "target": 3, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQYv8hFVgBSlbQVhN4w1mZqZV0f1rhniZDk7gMF8iHIng&s"}, {"name": "4 Zamorak Broadcasts", "category": "Bossing", "target": 4, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsaMPrHeTV5GDaC6If-E3692b8sD2C4WNHjDi1tyPF3oVz-yAVg8NSaxav&s=10"}, {"name": "2 Seismic Weapons", "category": "Bossing", "target": 2, "progress": 0, "image": "https://runescape.wiki/images/thumb/Voraga.png/247px-Voraga.png?ffba3"}, {"name": "10 Nex Broadcasts", "category": "Bossing", "target": 10, "progress": 0, "image": "https://runescape.wiki/images/thumb/Nex_%282011%29.png/173px-Nex_%282011%29.png?9979e"}, {"name": "20 DKS and/or Barrows Broadcasts", "category": "Bossing", "target": 20, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT1YGnM1-iLadxIBOUaGLPg3X29u2D2a8g-VhaSZT5Iyg&s=10"}, {"name": "40 GWD1 Broadcasts", "category": "Bossing", "target": 40, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfjaE2BIcK1o6jAQJHo5azxMTd9BQsJb9YP600Ii89jQ&s=10"}, {"name": "Khopesh of the Kharidian Set", "category": "Bossing", "target": 1, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQyxB34tQ8th3JZBTENpoVtAUv9IMNH31i4xYC9Yc78WA&s=10"}, {"name": "Reaper Crew", "category": "Bossing", "target": 2, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPDXmRY_6lPeZBM0e25cWlkpCFV4tRl8NrFiRRLBuILg&s=10"}, {"name": "Complete a Boss Collection Log", "category": "Bossing", "target": 3, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRQ0rUpLbFL0JGZagsbA35y2uKhb9EaPPhRUYzagLPo6Ehhi3juWKo43w&s=10"}, {"name": "Amulet of the Forsaken", "category": "Bossing", "target": 2, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbuIAvp5Gx1mwUtfxSId_gAREVF4MWUC4CyuRbtfwC-g&s=10"}, {"name": "Any GWD1 Trophy", "category": "Bossing", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/Boss_trophies_in_player_owned_house.png?c6452"}, {"name": "Any DK Trophy", "category": "Bossing", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/Boss_trophies_in_player_owned_house.png?c6452"}, {"name": "Any Rex Matriarch Trophy", "category": "Bossing", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/Boss_trophies_in_player_owned_house.png?c6452"}, {"name": "Any GWD2 Trophy", "category": "Bossing", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/Boss_trophies_in_player_owned_house.png?c6452"}, {"name": "Araxxor Trophy", "category": "Bossing", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/Boss_trophies_in_player_owned_house.png?c6452"}, {"name": "Raksha Trophy", "category": "Bossing", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/Boss_trophies_in_player_owned_house.png?c6452"}, {"name": "Kerapac Trophy", "category": "Bossing", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/Boss_trophies_in_player_owned_house.png?c6452"}, {"name": "Nakatra Trophy", "category": "Bossing", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/Boss_trophies_in_player_owned_house.png?c6452"}, {"name": "Vorkath Trophy", "category": "Bossing", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/Boss_trophies_in_player_owned_house.png?c6452"}, {"name": "Ambassador Trophy", "category": "Bossing", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/Boss_trophies_in_player_owned_house.png?c6452"}, {"name": "Zuk Trophy", "category": "Bossing", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/Boss_trophies_in_player_owned_house.png?c6452"}, {"name": "1 Dye", "category": "Clueing", "target": 1, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaC32m53w4foOrM0unjvIZM_nBzB2z7N4xegGoPLeMFw&s=10"}, {"name": "100 Easy", "category": "Clueing", "target": 100, "progress": 0, "image": "https://runescape.wiki/images/Sealed_clue_scroll_%28easy%29_detail.png?4f222"}, {"name": "100 Medium", "category": "Clueing", "target": 100, "progress": 0, "image": "https://runescape.wiki/images/thumb/Sealed_clue_scroll_%28medium%29_detail.png/100px-Sealed_clue_scroll_%28medium%29_detail.png?78482"}, {"name": "100 Hard", "category": "Clueing", "target": 100, "progress": 0, "image": "https://runescape.wiki/images/Sealed_clue_scroll_%28hard%29_detail.png?f5297"}, {"name": "100 Elite", "category": "Clueing", "target": 100, "progress": 0, "image": "https://runescape.wiki/images/Sealed_clue_scroll_%28elite%29_detail.png?40b6d"}, {"name": "1,000 Easy", "category": "Clueing", "target": 1000, "progress": 0, "image": "https://runescape.wiki/images/Sealed_clue_scroll_%28easy%29_detail.png?4f222"}, {"name": "1,000 Medium", "category": "Clueing", "target": 1000, "progress": 0, "image": "https://runescape.wiki/images/thumb/Sealed_clue_scroll_%28medium%29_detail.png/100px-Sealed_clue_scroll_%28medium%29_detail.png?78482"}, {"name": "1,000 Hard", "category": "Clueing", "target": 1000, "progress": 0, "image": "https://runescape.wiki/images/Sealed_clue_scroll_%28hard%29_detail.png?f5297"}, {"name": "1,000 Elite", "category": "Clueing", "target": 1000, "progress": 0, "image": "https://runescape.wiki/images/Sealed_clue_scroll_%28elite%29_detail.png?40b6d"}, {"name": "100 Master", "category": "Clueing", "target": 100, "progress": 0, "image": "https://runescape.wiki/images/Sealed_clue_scroll_%28master%29_detail.png?18ea7"}, {"name": "250 Master", "category": "Clueing", "target": 250, "progress": 0, "image": "https://runescape.wiki/images/Sealed_clue_scroll_%28master%29_detail.png?18ea7"}, {"name": "Zuk GM", "category": "Combat Achievement", "target": 1, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZfspw0Kuat0HVc_5PkOV7yKtueWWCPnuNj2C8LBdXvA&s=10"}, {"name": "Sanctum Master", "category": "Combat Achievement", "target": 1, "progress": 0, "image": "https://cdn.runescape.com/assets/img/external/news/2024/07/gykia4/secondheader.jpg"}, {"name": "Sanctum GM", "category": "Combat Achievement", "target": 1, "progress": 0, "image": "https://cdn.runescape.com/assets/img/external/news/2024/07/gykia4/secondheader.jpg"}, {"name": "Zamorak Master", "category": "Combat Achievement", "target": 1, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsaMPrHeTV5GDaC6If-E3692b8sD2C4WNHjDi1tyPF3oVz-yAVg8NSaxav&s=10"}, {"name": "Arch-Glacor Master Timer", "category": "Combat Achievement", "target": 1, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkP6H7sm7mZ5YKDgg_Td4sdZkSZlTcwm0EsP0MhzezWA&s=10"}, {"name": "RoTS Master", "category": "Combat Achievement", "target": 1, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRyTyWKlPB1rYkpYO--vzRRLWiHmi0EtIPxE_JAy94OAA&s=10"}, {"name": "Obtain a Pet", "category": "Misc", "target": 2, "progress": 0, "image": "https://runescape.wiki/images/Ralph_%28pet%29.png?c78e6"}, {"name": "Obtain a Boss Pet", "category": "Misc", "target": 2, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSpfTo0y3Yi98Ch5p5zGE7tQ4VVhiPf7cESolKadY_eCw&s=10"}, {"name": "Obtain a Skilling Pet", "category": "Misc", "target": 2, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaw4N-h_e2nqws_JQ-x6c94if5CulnLUglogbkJoCwEg&s"}, {"name": "3 Asuran Arsenal Heist Broadcasts", "category": "Skilling", "target": 3, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTnz831JSMJz19wqazNDg3TWBjLPnL-IHyE58lLODpZcw&s=10"}, {"name": "5 Big Game Hunter Broadcasts", "category": "Skilling", "target": 5, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0kL6OLm3fj1qfZMyWs4aZaqIycORArwTEHR6blLVhhg&s=10"}, {"name": "1 Archaeology Rare Broadcast (Inquisitor or Spear Tip)", "category": "Skilling", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/Spear_of_Annihilation_tip_detail.png?9cf45"}, {"name": "3 Warped Stones from Dungeoneering", "category": "Skilling", "target": 3, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ11S2UxND2vqRptxJqcAmGck_8btX23oFZrrjZO4jpSg&s=10"}, {"name": "4 Croesus Broadcasts", "category": "Skilling", "target": 4, "progress": 0, "image": "https://runescape.wiki/images/thumb/Croesus_Front_promotional_image.png/501px-Croesus_Front_promotional_image.png?0b476"}, {"name": "3 Gate of Elidinis Broadcasts", "category": "Skilling", "target": 3, "progress": 0, "image": "https://runescape.wiki/images/thumb/Gate_of_Elidinis.png/300px-Gate_of_Elidinis.png?f7a3b"}, {"name": "3 Balarak's Sash Brush or Skeka's Hypnowand Pieces", "category": "Skilling", "target": 3, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrDpY0mRs726YMhmDJR1kPrYHu0o5v5buSVnRnNahxlA&s=10"}, {"name": "3 Vault of Hereditas Heist Broadcasts", "category": "Skilling", "target": 3, "progress": 0, "image": "https://runescape.wiki/images/thumb/Vault_of_Hereditas.png/300px-Vault_of_Hereditas.png?86024"}, {"name": "Anachronia Agility Lap Sub-5:45", "category": "Skilling", "target": 2, "progress": 0, "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgheSWzAtcspUOuznRYeqAd9ZoUpd8mOEZpeozSfZ5ew&s=10"}, {"name": "10 Slayer Boots or Add-ons", "category": "Slayer", "target": 10, "progress": 0, "image": "https://runescape.wiki/images/thumb/Glaiven_boots_detail.png/198px-Glaiven_boots_detail.png?8cb92"}, {"name": "3 Raptor Slayer Creature Broadcasts", "category": "Slayer", "target": 3, "progress": 0, "image": "https://runescape.wiki/images/thumb/Raptor_artwork.jpg/248px-Raptor_artwork.jpg?e96f7"}, {"name": "4 Slayer Gloves", "category": "Slayer", "target": 4, "progress": 0, "image": "https://runescape.wiki/images/thumb/Static_gloves_detail.png/200px-Static_gloves_detail.png?e6eb6"}, {"name": "Complete a Slayer Collection", "category": "Slayer", "target": 2, "progress": 0, "image": "https://runescape.wiki/images/Slayer_Codex_interface.png?ba415"}, {"name": "Ancient Elven Ritual Shard", "category": "Slayer", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/thumb/Ancient_elven_ritual_shard_detail.png/200px-Ancient_elven_ritual_shard_detail.png?4d597"}, {"name": "Cinderbanes", "category": "Slayer", "target": 1, "progress": 0, "image": "https://runescape.wiki/images/thumb/Cinderbane_gloves_detail.png/200px-Cinderbane_gloves_detail.png?b6b7a"}, {"name": "99 / 110 / 120 / 200M Broadcast", "category": "XP", "target": 3, "progress": 0, "image": "https://preview.redd.it/5-8b-right-im-outta-here-v0-fdz62pdsvg5h1.png?width=368&format=png&auto=webp&s=ace55520324708981cb211fb628a410a06cf1643"}, {"name": "30 Caps at Citadel", "category": "Misc", "target": 30, "progress": 0, "image": "https://runescape.wiki/images/thumb/Clan_Citadel_skyline.png/964px-Clan_Citadel_skyline.png?771be"}];
+
+async function runImport(){
+  const btn = document.getElementById('importBtn');
+  const status = document.getElementById('importStatus');
+  btn.disabled = true;
+  status.textContent = 'Importing...';
+  status.style.color = 'var(--muted)';
+  try{
+    // Firestore batches cap at 500 writes; chunk just in case the list grows.
+    const chunkSize = 400;
+    for(let i = 0; i < IMPORT_TASKS.length; i += chunkSize){
+      const batch = writeBatch(db);
+      const chunk = IMPORT_TASKS.slice(i, i + chunkSize);
+      chunk.forEach(t => {
+        const ref = doc(tasksCol);
+        batch.set(ref, { ...t, createdAt: Date.now() });
+      });
+      await batch.commit();
+    }
+    status.style.color = 'var(--ok, #7fae6f)';
+    status.textContent = `Imported ${IMPORT_TASKS.length} tasks.`;
+  }catch(err){
+    console.error(err);
+    status.style.color = 'var(--danger)';
+    status.textContent = 'Import failed: ' + err.message;
+  }finally{
+    btn.disabled = false;
+  }
+}
+document.getElementById('importBtn').addEventListener('click', runImport);
 
 /* ---------- Init ---------- */
 seedDefaultsIfEmpty().catch(err => console.error('seed error', err));
